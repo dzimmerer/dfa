@@ -16,11 +16,9 @@ y = tf.placeholder(tf.float32, [None, 10])
 middle = 100
 top = 30
 w_1 = tf.Variable(tf.truncated_normal([784, middle]))
-w_2 = tf.Variable(tf.truncated_normal([middle, top]))
-w_3 = tf.Variable(tf.truncated_normal([top, 10]))
+w_2 = tf.Variable(tf.truncated_normal([middle, 10]))
 
-w_2_b = tf.Variable(tf.truncated_normal([middle, top]))
-w_3_b = tf.Variable(tf.truncated_normal([top, 10]))
+w_2_b = tf.Variable(tf.truncated_normal([middle, 10]))
 
 #### Functions
 
@@ -39,21 +37,17 @@ z_1 = tf.matmul(a_0, w_1)
 a_1 = sigma(z_1)
 z_2 = tf.matmul(a_1, w_2)
 a_2 = sigma(z_2)
-z_3 = tf.matmul(a_2, w_3)
-a_3 = sigma(z_3)
+
 
 #### Error
 
-diff = tf.sub(a_3, y)
+diff = tf.sub(a_2, y)
 
 #### Backward
 
-d_z_3 = tf.mul(diff, sigmaprime(z_3))
-d_w_3 = tf.matmul(tf.transpose(a_2), d_z_3)
-
-d_a_2 = tf.matmul(d_z_3, tf.transpose(w_3_b))
-d_z_2 = tf.mul(d_a_2, sigmaprime(z_2))
+d_z_2 = tf.mul(diff, sigmaprime(z_2))
 d_w_2 = tf.matmul(tf.transpose(a_1), d_z_2)
+
 
 d_a_1 = tf.matmul(d_z_2, tf.transpose(w_2_b))
 d_z_1 = tf.mul(d_a_1, sigmaprime(z_1))
@@ -65,7 +59,6 @@ eta = tf.constant(0.5)
 step = [
 	tf.assign(w_1, tf.sub(w_1, tf.mul(eta, d_w_1)))
 	, tf.assign(w_2, tf.sub(w_2, tf.mul(eta, d_w_2)))
-	, tf.assign(w_3, tf.sub(w_3, tf.mul(eta, d_w_3)))
 ]
 
 ### "New:"
@@ -76,7 +69,7 @@ step = [
 #### Run network
 
 
-acct_mat = tf.equal(tf.argmax(a_3, 1), tf.argmax(y, 1))
+acct_mat = tf.equal(tf.argmax(a_2, 1), tf.argmax(y, 1))
 acct_res = tf.reduce_sum(tf.cast(acct_mat, tf.float32))
 
 sess = tf.InteractiveSession()

@@ -55,15 +55,26 @@ d_w_1 = tf.matmul(tf.transpose(a_0), d_z_1)
 
 #### Updates
 
-eta = tf.constant(0.5)
-step = [
-	tf.assign(w_1, tf.sub(w_1, tf.mul(eta, d_w_1)))
-	, tf.assign(w_2, tf.sub(w_2, tf.mul(eta, d_w_2)))
-]
+## Old (customn) :
 
-### "New:"
-#cost = tf.mul(diff, diff)
-#step = tf.train.GradientDescentOptimizer(0.1).minimize(cost)
+# eta = tf.constant(0.5)
+# step = [
+# 	tf.assign(w_1, tf.sub(w_1, tf.mul(eta, d_w_1)))
+# 	, tf.assign(w_2, tf.sub(w_2, tf.mul(eta, d_w_2)))
+# ]
+
+## New (optimiizers):
+
+# opt = tf.train.GradientDescentOptimizer(learning_rate=0.1)
+opt = tf.train.RMSPropOptimizer(learning_rate=0.1)
+
+grads_and_vars2 = [(d_w_1, w_1), (d_w_2, w_2)]
+step = opt.apply_gradients(grads_and_vars2)
+
+## Without:
+
+# cost = tf.mul(diff, diff)
+# step = tf.train.GradientDescentOptimizer(0.1).minimize(cost)
 
 
 #### Run network

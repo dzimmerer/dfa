@@ -20,11 +20,14 @@ w_2 = tf.Variable(tf.truncated_normal([middle, 10]))
 
 w_2_b = tf.Variable(tf.truncated_normal([middle, 10]))
 
+w_2_x = tf.Variable(tf.truncated_normal([10, middle]))
+
 #### Functions
 
 def sigma(x):
-	return tf.div(tf.constant(1.0),
-				  tf.add(tf.constant(1.0), tf.exp(tf.neg(x))))
+	return tf.sigmoid(x)
+	# return tf.div(tf.constant(1.0),
+	# 			  tf.add(tf.constant(1.0), tf.exp(tf.neg(x))))
 
 
 def sigmaprime(x):
@@ -50,8 +53,21 @@ d_w_2 = tf.matmul(tf.transpose(a_1), d_z_2)
 
 
 d_a_1 = tf.matmul(d_z_2, tf.transpose(w_2_b))
-d_z_1 = tf.mul(d_a_1, sigmaprime(z_1))
-d_w_1 = tf.matmul(tf.transpose(a_0), d_z_1)
+
+print(diff.get_shape())
+print(d_a_1.get_shape())
+
+d_x_1 = tf.matmul(diff, w_2_x)
+
+print(d_x_1.get_shape())
+
+d_z_1 = tf.mul(d_x_1, sigmaprime(z_1))
+
+print(d_z_1.get_shape())
+
+d_xx_1 = tf.mul(sigma(z_1), d_x_1)
+
+d_w_1 = tf.matmul(tf.transpose(a_0), d_xx_1)
 
 #### Updates
 
@@ -66,7 +82,7 @@ d_w_1 = tf.matmul(tf.transpose(a_0), d_z_1)
 ## New (optimiizers):
 
 # opt = tf.train.GradientDescentOptimizer(learning_rate=0.1)
-opt = tf.train.RMSPropOptimizer(learning_rate=0.1)
+opt = tf.train.RMSPropOptimizer(learning_rate=0.01)
 
 grads_and_vars2 = [(d_w_1, w_1), (d_w_2, w_2)]
 step = opt.apply_gradients(grads_and_vars2)
@@ -87,7 +103,7 @@ sess = tf.InteractiveSession()
 sess.run(tf.global_variables_initializer())
 
 for i in range(100000):
-	batch_xs, batch_ys = mnist.train.next_batch(10)
+	batch_xs, batch_ys = mnist.train.next_batch(100)
 	sess.run(step, feed_dict = {a_0: batch_xs,
 								y : batch_ys})
 

@@ -19,14 +19,15 @@ w_1 = tf.Variable(tf.truncated_normal([784, middle]))
 w_2 = tf.Variable(tf.truncated_normal([middle, top]))
 w_3 = tf.Variable(tf.truncated_normal([top, 10]))
 
-w_2_b = tf.Variable(tf.truncated_normal([middle, top]))
-w_3_b = tf.Variable(tf.truncated_normal([top, 10]))
+w_2_x = tf.Variable(tf.truncated_normal([10, middle]))
+w_3_x = tf.Variable(tf.truncated_normal([10, top]))
 
 #### Functions
 
 def sigma(x):
-	return tf.div(tf.constant(1.0),
-				  tf.add(tf.constant(1.0), tf.exp(tf.neg(x))))
+	return tf.sigmoid(x)
+	# return tf.div(tf.constant(1.0),
+	# 			  tf.add(tf.constant(1.0), tf.exp(tf.neg(x))))
 
 
 def sigmaprime(x):
@@ -42,6 +43,7 @@ a_2 = sigma(z_2)
 z_3 = tf.matmul(a_2, w_3)
 a_3 = sigma(z_3)
 
+
 #### Error
 
 diff = tf.sub(a_3, y)
@@ -51,26 +53,29 @@ diff = tf.sub(a_3, y)
 d_z_3 = tf.mul(diff, sigmaprime(z_3))
 d_w_3 = tf.matmul(tf.transpose(a_2), d_z_3)
 
-d_a_2 = tf.matmul(d_z_3, tf.transpose(w_3_b))
-d_z_2 = tf.mul(d_a_2, sigmaprime(z_2))
+
+d_x_2 = tf.matmul(diff, w_3_x)
+d_z_2 = tf.mul(d_x_2, sigmaprime(z_2))
 d_w_2 = tf.matmul(tf.transpose(a_1), d_z_2)
 
-d_a_1 = tf.matmul(d_z_2, tf.transpose(w_2_b))
-d_z_1 = tf.mul(d_a_1, sigmaprime(z_1))
+d_x_1 = tf.matmul(diff, w_2_x)
+d_z_1 = tf.mul(d_x_1, sigmaprime(z_1))
 d_w_1 = tf.matmul(tf.transpose(a_0), d_z_1)
 
 #### Updates
 
-eta = tf.constant(0.5)
-step = [
-	tf.assign(w_1, tf.sub(w_1, tf.mul(eta, d_w_1)))
-	, tf.assign(w_2, tf.sub(w_2, tf.mul(eta, d_w_2)))
-	, tf.assign(w_3, tf.sub(w_3, tf.mul(eta, d_w_3)))
-]
+## New (optimizers):
 
-### "New:"
-#cost = tf.mul(diff, diff)
-#step = tf.train.GradientDescentOptimizer(0.1).minimize(cost)
+# opt = tf.train.GradientDescentOptimizer(learning_rate=0.1)
+opt = tf.train.RMSPropOptimizer(learning_rate=0.01)
+
+grads_and_vars2 = [(d_w_1, w_1), (d_w_2, w_2), (d_w_3, w_3)]
+step = opt.apply_gradients(grads_and_vars2)
+
+## Without:
+
+# cost = tf.mul(diff, diff)
+# step = tf.train.GradientDescentOptimizer(0.1).minimize(cost)
 
 
 #### Run network
@@ -83,7 +88,7 @@ sess = tf.InteractiveSession()
 sess.run(tf.global_variables_initializer())
 
 for i in range(100000):
-	batch_xs, batch_ys = mnist.train.next_batch(10)
+	batch_xs, batch_ys = mnist.train.next_batch(100)
 	sess.run(step, feed_dict = {a_0: batch_xs,
 								y : batch_ys})
 

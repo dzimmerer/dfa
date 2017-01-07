@@ -14,11 +14,8 @@ a_0 = tf.placeholder(tf.float32, [None, 784])
 y = tf.placeholder(tf.float32, [None, 10])
 
 middle = 100
-top = 30
 w_1 = tf.Variable(tf.truncated_normal([784, middle]))
 w_2 = tf.Variable(tf.truncated_normal([middle, 10]))
-
-w_2_b = tf.Variable(tf.truncated_normal([middle, 10]))
 
 w_2_x = tf.Variable(tf.truncated_normal([10, middle]))
 
@@ -51,35 +48,13 @@ diff = tf.sub(a_2, y)
 d_z_2 = tf.mul(diff, sigmaprime(z_2))
 d_w_2 = tf.matmul(tf.transpose(a_1), d_z_2)
 
-
-d_a_1 = tf.matmul(d_z_2, tf.transpose(w_2_b))
-
-print(diff.get_shape())
-print(d_a_1.get_shape())
-
 d_x_1 = tf.matmul(diff, w_2_x)
-
-print(d_x_1.get_shape())
-
 d_z_1 = tf.mul(d_x_1, sigmaprime(z_1))
-
-print(d_z_1.get_shape())
-
-d_xx_1 = tf.mul(sigma(z_1), d_x_1)
-
-d_w_1 = tf.matmul(tf.transpose(a_0), d_xx_1)
+d_w_1 = tf.matmul(tf.transpose(a_0), d_z_1)
 
 #### Updates
 
-## Old (customn) :
-
-# eta = tf.constant(0.5)
-# step = [
-# 	tf.assign(w_1, tf.sub(w_1, tf.mul(eta, d_w_1)))
-# 	, tf.assign(w_2, tf.sub(w_2, tf.mul(eta, d_w_2)))
-# ]
-
-## New (optimiizers):
+## New (optimizers):
 
 # opt = tf.train.GradientDescentOptimizer(learning_rate=0.1)
 opt = tf.train.RMSPropOptimizer(learning_rate=0.01)
